@@ -1,0 +1,1 @@
+{"version":3,"file":"GetAllBooks.js","sourceRoot":"","sources":["../../../src/usecases/books/GetAllBooks.ts"],"names":[],"mappings":";;AAGA,MAAqB,WAAW;IAC9B,YAA6B,cAA8B;QAA9B,mBAAc,GAAd,cAAc,CAAgB;IAAG,CAAC;IAE/D,KAAK,CAAC,OAAO;QACX,OAAO,IAAI,CAAC,cAAc,CAAC,WAAW,EAAE,CAAC;IAC3C,CAAC;CACF;AAND,8BAMC"}
