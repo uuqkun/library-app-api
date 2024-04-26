@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.errorMiddleware = void 0;
+exports.ErrorMiddleware = void 0;
 const ResponseError_1 = require("../../../error/ResponseError");
-const errorMiddleware = (err, req, res, next) => {
+const ErrorMiddleware = (err, req, res, next) => {
     if (!err) {
         next();
         return;
@@ -24,5 +24,5 @@ const errorMiddleware = (err, req, res, next) => {
             .end();
     }
 };
-exports.errorMiddleware = errorMiddleware;
+exports.ErrorMiddleware = ErrorMiddleware;
 //# sourceMappingURL=ErrorMiddleware.js.map

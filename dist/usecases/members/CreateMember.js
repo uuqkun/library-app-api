@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateMember = void 0;
 class CreateMember {
     constructor(memberRepository) {
         this.memberRepository = memberRepository;
@@ -9,5 +8,5 @@ class CreateMember {
         return this.memberRepository.createMember(member);
     }
 }
-exports.CreateMember = CreateMember;
+exports.default = CreateMember;
 //# sourceMappingURL=CreateMember.js.map

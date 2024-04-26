@@ -1,0 +1,1 @@
+{"version":3,"file":"InsertBook.js","sourceRoot":"","sources":["../../../src/usecases/books/InsertBook.ts"],"names":[],"mappings":";;AAIA,MAAqB,UAAU;IAC3B,YAA6B,cAA8B;QAA9B,mBAAc,GAAd,cAAc,CAAgB;IAAG,CAAC;IAE/D,KAAK,CAAC,OAAO,CAAC,IAAU;QACpB,OAAO,IAAI,CAAC,cAAc,CAAC,UAAU,CAAC,IAAI,CAAC,CAAC;IAChD,CAAC;CACJ;AAND,6BAMC"}

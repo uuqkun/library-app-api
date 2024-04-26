@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetAllMembers = void 0;
 class GetAllMembers {
     constructor(memberRepository) {
         this.memberRepository = memberRepository;
@@ -9,5 +8,5 @@ class GetAllMembers {
         return this.memberRepository.getAllMembers();
     }
 }
-exports.GetAllMembers = GetAllMembers;
+exports.default = GetAllMembers;
 //# sourceMappingURL=GetAllMembers.js.map
