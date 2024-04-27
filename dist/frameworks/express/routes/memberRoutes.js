@@ -4,11 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const MongoDBMemberRepository_1 = require("../../database/MongoDBMemberRepository");
+const MemberService_1 = require("../../database/MemberService");
 const members_1 = require("../../../usecases/members");
 const memberRoutes = express_1.default.Router();
 const mongoURI = "mongodb://localhost:27017/library";
-const memberRepository = new MongoDBMemberRepository_1.MongoDBMemberRepository(mongoURI);
+const memberRepository = new MemberService_1.MemberService(mongoURI);
 // routes
 memberRoutes.get("/members", async (req, res) => {
     try {

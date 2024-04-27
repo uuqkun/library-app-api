@@ -2,8 +2,14 @@ import { Db, MongoClient } from "mongodb";
 import { MemberRepository } from "../../interfaces/repositories/MemberRepository";
 import Member from "../../entities/Member";
 import { ResponseError } from "../../error/ResponseError";
+import { validate } from "../../entities/validators/validation";
+import {
+  getMemberByIdValidation,
+  registerMemberValidation,
+  updateMemberValidation,
+} from "../../entities/validators/memberValidation";
 
-export class MongoDBMemberRepository implements MemberRepository {
+export class MemberService implements MemberRepository {
   private client: MongoClient;
   private db: Db;
   private readonly collectionName: string = "members";
@@ -38,14 +44,15 @@ export class MongoDBMemberRepository implements MemberRepository {
     });
   }
 
-  async getMemberById(memberId: string): Promise<Member> {
+  async getMemberById(reqID: string): Promise<Member> {
+    const { MemberID } = validate(getMemberByIdValidation, {
+      MemberID: reqID,
+    });
     const collection = this.db.collection(this.collectionName);
 
     const member = await collection.findOne({
-      MemberID: memberId,
+      MemberID: MemberID,
     });
-
-    console.log(member);
 
     if (!member) throw new ResponseError(404, "Member not found");
 
@@ -61,67 +68,82 @@ export class MongoDBMemberRepository implements MemberRepository {
   }
 
   async createMember(member: Member): Promise<void> {
+    const { Email, ...data } = validate(registerMemberValidation, {
+      ...member,
+    });
     const collection = this.db.collection(this.collectionName);
 
     const isMemberExist = await collection.findOne({
-      Email: member.Email,
+      Email: Email,
     });
-
+    
     // CHECK IF MEMBER ALREADY REGISTERED
     if (isMemberExist)
       throw new ResponseError(409, "Cannot use this credential");
 
+    data.Email = Email;
+    
     const lastMember = await collection
       .find()
       .sort({ _id: -1 })
       .limit(1)
       .toArray();
 
+    // COMPOSE NEW MEMBER ID
     const lastMemberID =
       lastMember.length > 0 ? lastMember[0].MemberID : "MEM000";
     const formattedID: number = parseInt(lastMemberID.slice(3)) + 1;
     const newMemberID = `MEM${formattedID.toString().padStart(3, "0")}`;
 
+    // COMPOSE REGISTRATION DATE
+    const RegistrationDate = `${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}`;
+    data.RegistrationDate = RegistrationDate;
+
     // INSERT MEMBER TO DB
-    await collection.insertOne({ MemberID: newMemberID, ...member });
+    await collection.insertOne({ MemberID: newMemberID, ...data });
   }
 
-  async updateMember(memberID: string, data: any): Promise<void> {
+  async updateMember(reqID: string, data: any): Promise<void> {
+    const { MemberID, ...validatedData } = validate(updateMemberValidation, {
+      MemberID: reqID,
+      ...data,
+    });
+
     const collection = this.db.collection(this.collectionName);
 
-    const isMemberExist = await collection.findOne({
-      MemberID: memberID,
+    const member = await collection.findOne({
+      MemberID: MemberID,
     });
 
     // CHECK IF MEMBER EXIST
-    if (!isMemberExist) throw new ResponseError(404, "Member not found");
-
-    // VALIDATE DATA
-    const validatedData = data;
+    if (!member) throw new ResponseError(404, "Member not found");
 
     // SEND UPDATED DATA
     await collection.updateOne(
-      { MemberID: memberID },
+      { MemberID: MemberID },
       {
         $set: {
-          Name: validatedData.Name || isMemberExist.Name,
-          Email: validatedData.Email || isMemberExist.Email,
-          Phone: validatedData.Phone || isMemberExist.Phone,
-          Address: validatedData.Address || isMemberExist.Address,
+          Name: validatedData.Name || member.Name,
+          Email: validatedData.Email || member.Email,
+          Phone: validatedData.Phone || member.Phone,
+          Address: validatedData.Address || member.Address,
         },
       }
     );
   }
 
-  async deleteMember(memberID: string): Promise<void> {
+  async deleteMember(reqID: string): Promise<void> {
+    const { MemberID } = validate(getMemberByIdValidation, {
+      MemberID: reqID,
+    });
     const collection = this.db.collection(this.collectionName);
 
     const member = await collection.findOne({
-      MemberID: memberID,
+      MemberID: MemberID,
     });
 
     if (!member) throw new ResponseError(404, "Member not found");
 
-    await collection.deleteOne({ MemberID: memberID });
+    await collection.deleteOne({ MemberID: MemberID });
   }
 }

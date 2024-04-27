@@ -4,12 +4,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const MongoDBBookRepository_1 = require("../../database/MongoDBBookRepository");
+const BookService_1 = require("../../database/BookService");
 const books_1 = require("../../../usecases/books");
 const ResponseError_1 = require("../../../error/ResponseError");
 const bookRoutes = express_1.default.Router();
 const mongoURI = "mongodb://localhost:27017/library";
-const bookRepository = new MongoDBBookRepository_1.MongoDBBookRepository(mongoURI);
+const bookRepository = new BookService_1.BookService(mongoURI);
 // routes
 bookRoutes.get("/books", async (req, res) => {
     try {

@@ -1,5 +1,5 @@
 import express, { NextFunction, Request, Response } from "express";
-import { MongoDBMemberRepository } from "../../database/MongoDBMemberRepository";
+import { MemberService } from "../../database/MemberService";
 import {
   CreateMember,
   DeleteMember,
@@ -10,7 +10,7 @@ import {
 
 const memberRoutes = express.Router();
 const mongoURI = "mongodb://localhost:27017/library";
-const memberRepository = new MongoDBMemberRepository(mongoURI);
+const memberRepository = new MemberService(mongoURI);
 
 // routes
 memberRoutes.get("/members", async (req: Request, res: Response) => {
