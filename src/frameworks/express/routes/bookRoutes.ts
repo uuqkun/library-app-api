@@ -1,5 +1,5 @@
 import express, { NextFunction, Request, Response } from "express";
-import { MongoDBBookRepository } from "../../database/MongoDBBookRepository";
+import { BookService } from "../../database/BookService";
 import {
   DeleteBook,
   GetAllBooks,
@@ -11,7 +11,7 @@ import { ResponseError } from "../../../error/ResponseError";
 
 const bookRoutes = express.Router();
 const mongoURI = "mongodb://localhost:27017/library";
-const bookRepository = new MongoDBBookRepository(mongoURI);
+const bookRepository = new BookService(mongoURI);
 
 // routes
 bookRoutes.get("/books", async (req: Request, res: Response) => {
