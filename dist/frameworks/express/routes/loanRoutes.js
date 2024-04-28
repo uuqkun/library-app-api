@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.loanRoutes = void 0;
 const express_1 = __importDefault(require("express"));
-const ResponseError_1 = require("../../../error/ResponseError");
 const LoanService_1 = require("../../database/LoanService");
 const GetAllLoans_1 = __importDefault(require("../../../usecases/loans/GetAllLoans"));
 const GetLoanById_1 = __importDefault(require("../../../usecases/loans/GetLoanById"));
@@ -17,7 +16,7 @@ const router = express_1.default.Router();
 exports.loanRoutes = router;
 const mongoURI = "mongodb://localhost:27017/library";
 const loanRepository = new LoanService_1.LoanService(mongoURI);
-router.get("/loans", async (req, res) => {
+router.get("/loans", async (req, res, next) => {
     try {
         // ESTABLISH CONNECTION
         await loanRepository.connect();
@@ -45,7 +44,7 @@ router.get("/loans", async (req, res) => {
         }
     }
     catch (error) {
-        throw new ResponseError_1.ResponseError(500, "Internal server errors");
+        next(error);
     }
 });
 router.get("/loans/:loanID", async (req, res, next) => {

@@ -81,7 +81,7 @@ class LoanService {
             .limit(1)
             .toArray();
         // COMPOSE NEW MEMBER ID
-        const LastLoanID = lastLoan.length > 0 ? lastLoan[0].LoanID : "LO000";
+        const LastLoanID = lastLoan.length > 0 ? lastLoan[0].LoanID : "L000";
         const formattedID = parseInt(LastLoanID.slice(1)) + 1;
         const nextLoanID = `L${formattedID.toString().padStart(3, "0")}`;
         data.LoanID = nextLoanID;
@@ -140,57 +140,71 @@ class LoanService {
         // FIND LOAN BY MEMBER ID
         if (MemberID) {
             const loan = await collection.findOne({ MemberID: MemberID });
-            console.info(loan);
             if (!loan)
                 throw new ResponseError_1.ResponseError(404, "Loan not found");
             const member = await this.db.collection("members").findOne({ MemberID });
-            if (!member)
-                throw new ResponseError_1.ResponseError(404, "Member not found");
-            console.info(member);
             const book = await this.db
                 .collection("books")
-                .findOne({ ISBN: loan.ISBN })
-                .catch((err) => {
-                throw new ResponseError_1.ResponseError(404, err.message || "Book not found");
-            });
-            console.info(book);
+                .findOne({ ISBN: loan.ISBN });
             result = {
                 _id: loan._id,
                 LoanID: loan.LoanID,
+                ISBN: loan.ISBN,
                 LoanDate: loan.LoanDate,
                 DueDate: loan.DueDate,
                 ReturnDate: loan.ReturnDate,
                 Fines: loan.Fines,
-                book: {
-                    ISBN: book.ISBN,
-                    Title: book.Title,
-                },
+                book: book
+                    ? {
+                        Title: book.Title,
+                        Author: book.Author,
+                        Category: book.Category,
+                        PublishYear: book.PublishYear,
+                        Publisher: book.Publisher,
+                    }
+                    : "Book not found",
                 member: {
                     MemberID: loan.MemberID,
                     Name: member.Name,
+                    Email: member.Email,
+                    Phone: member.Phone,
                 },
             };
             console.log(result);
             return result;
         }
         // FIND LOAN BY MEMBER NAME
-        const member = await this.db.collection("members").findOne({ Name: Name });
+        const member = await this.db
+            .collection("members")
+            .findOne({ Name: { $regex: new RegExp(`^${Name}`, "i") } });
+        if (!member)
+            throw new ResponseError_1.ResponseError(404, "Member not found");
         const loan = await collection.findOne({ MemberID: member.MemberID });
+        if (!loan)
+            throw new ResponseError_1.ResponseError(404, "Loan not found");
         const book = await this.db.collection("books").findOne({ ISBN: loan.ISBN });
         result = {
             _id: loan._id,
             LoanID: loan.LoanID,
+            ISBN: loan.ISBN,
             LoanDate: loan.LoanDate,
             DueDate: loan.DueDate,
             ReturnDate: loan.ReturnDate,
             Fines: loan.Fines,
-            book: {
-                ISBN: book.ISBN,
-                Title: book.Title,
-            },
+            book: book
+                ? {
+                    Title: book.Title,
+                    Author: book.Author,
+                    Category: book.Category,
+                    PublishYear: book.PublishYear,
+                    Publisher: book.Publisher,
+                }
+                : "Book not found",
             member: {
                 MemberID: loan.MemberID,
                 Name: member.Name,
+                Email: member.Email,
+                Phone: member.Phone,
             },
         };
         return result;
