@@ -1,4 +1,7 @@
+import { ObjectId } from "mongodb";
+
 export default interface Loan {
+  _id: ObjectId;
   LoanID: string;
   MemberID: string;
   ISBN: string;

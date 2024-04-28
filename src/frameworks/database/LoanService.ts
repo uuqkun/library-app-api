@@ -1,12 +1,19 @@
-import { Db, MongoClient } from "mongodb";
-import { BookRepository } from "../../interfaces/repositories/BookRepository";
-import Book from "../../entities/Book";
+import { Db, MongoClient, ObjectId } from "mongodb";
 import { ResponseError } from "../../error/ResponseError";
+import { LoanRepository } from "../../interfaces/repositories/LoanRepository";
+import Loan from "../../entities/Loan";
+import { validate } from "../../entities/validators/validation";
+import {
+  createLoanValidation,
+  getLoanByIdValidation,
+  getLoanValidation,
+} from "../../entities/validators/loanValidation";
+import { Request } from "express";
 
-export class MongoDBBookRepository implements BookRepository {
+export class LoanService implements LoanRepository {
   private client: MongoClient;
   private db: Db;
-  private readonly collectionName: string = "books";
+  private readonly collectionName: string = "loans";
 
   constructor(mongoURI: string) {
     this.client = new MongoClient(mongoURI);
@@ -21,99 +28,245 @@ export class MongoDBBookRepository implements BookRepository {
     await this.client.close();
   }
 
-  async getAllBooks(): Promise<Book[]> {
-    const collection = this.db.collection(this.collectionName);
-    const document = await collection.find().toArray();
+  async getAllLoans(): Promise<Loan[]> {
+    // GET ALL LOANS
+    const loans = await this.db
+      .collection(this.collectionName)
+      .find()
+      .toArray();
 
-    return document.map((Book: Book) => {
+    return loans.map((loan: Loan) => {
       return {
-        _id: Book._id,
-        ISBN: Book.ISBN,
-        Title: Book.Title,
-        Author: Book.Author,
-        Category: Book.Category,
-        PublishYear: Book.PublishYear,
-        Publisher: Book.Publisher,
-        AvailableCopies: Book.AvailableCopies,
+        _id: loan._id,
+        LoanID: loan.LoanID,
+        MemberID: loan.MemberID,
+        ISBN: loan.ISBN,
+        LoanDate: loan.LoanDate,
+        DueDate: loan.DueDate,
+        ReturnDate: loan.ReturnDate,
+        Fines: loan.Fines,
       };
     });
   }
 
-  async getBookByISBN(reqISBN: string): Promise<Book> {
-    const collection = this.db.collection(this.collectionName);
-
-    const Book = await collection.findOne({
-      ISBN: reqISBN,
+  async getLoanByID(reqLoanID: string): Promise<Loan> {
+    // GET THE ID
+    const { LoanID } = await validate(getLoanByIdValidation, {
+      LoanID: reqLoanID,
     });
 
-    if (!Book) throw new ResponseError(404, "Book not found");
+    // FIND LOAN
+    const collection = this.db.collection(this.collectionName);
+    const loan = await collection.findOne({ LoanID: LoanID });
+
+    // THROW ERROR IF NOT FOUND
+    if (!loan) throw new ResponseError(404, "Loan not found");
+
+    const { _id, MemberID, ISBN, LoanDate, DueDate, ReturnDate, Fines } = loan;
 
     return {
-      _id: Book._id,
-      ISBN: Book.ISBN,
-      Title: Book.Title,
-      Author: Book.Author,
-      Category: Book.Category,
-      PublishYear: Book.PublishYear,
-      Publisher: Book.Publisher,
-      AvailableCopies: Book.AvailableCopies,
+      _id: _id,
+      LoanID: LoanID,
+      MemberID: MemberID,
+      ISBN: ISBN,
+      LoanDate: LoanDate,
+      DueDate: DueDate,
+      ReturnDate: ReturnDate,
+      Fines: Fines,
     };
   }
 
-  async insertBook(body: Book): Promise<void> {
+  async createLoan(loan: Loan): Promise<void> {
+    const { MemberID, ISBN, ...data } = validate(createLoanValidation, {
+      ...loan,
+    });
     const collection = this.db.collection(this.collectionName);
 
-    const isBookExist = await collection.findOne({
-      ISBN: body.ISBN,
+    const isLoanExist = await collection.findOne({
+      MemberID: MemberID,
+      ISBN: ISBN,
+      ReturnDate: null,
     });
 
-    // CHECK IF BOOK ALREADY REGISTERED
-    if (isBookExist) throw new ResponseError(409, "Book already registered");
+    // CHECK IF MEMBER ALREADY REGISTERED
+    if (isLoanExist)
+      throw new ResponseError(
+        409,
+        "Loan already exist, please return book first"
+      );
 
-    // INSERT Book TO DB
-    await collection.insertOne(body);
+    // INSERT LOAN TO DB
+    data.MemberID = MemberID;
+    data.ISBN = ISBN;
+
+    const lastLoan = await collection
+      .find()
+      .sort({ _id: -1 })
+      .limit(1)
+      .toArray();
+
+    // COMPOSE NEW MEMBER ID
+    const LastLoanID = lastLoan.length > 0 ? lastLoan[0].LoanID : "L000";
+    const formattedID: number = parseInt(LastLoanID.slice(1)) + 1;
+    const nextLoanID = `L${formattedID.toString().padStart(3, "0")}`;
+    data.LoanID = nextLoanID;
+
+    // COMPOSE REGISTRATION DATE
+    data.LoanDate = `${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}`;
+    data.DueDate = `${new Date().getFullYear()}-${new Date().getMonth()}-${
+      new Date().getDate() + 7
+    }`;
+    data.ReturnDate = null;
+    data.Fines = 0;
+
+    // DECREMENT AVAILABLE COPIES
+    await this.db
+      .collection("books")
+      .updateOne({ ISBN: ISBN }, { $inc: { AvailableCopies: -1 } });
+
+    // INSERT MEMBER TO DB
+    await collection.insertOne({ ...data });
   }
 
-  async updateBook(ISBN: string, body: any): Promise<void> {
+  async updateLoan(LoanID: string): Promise<void> {
     const collection = this.db.collection(this.collectionName);
 
-    const isBookExist = await collection.findOne({
-      ISBN: ISBN,
-    });
+    // FIND LOAN
+    const loan = await collection.findOne({ LoanID: LoanID });
 
-    // CHECK IF Book EXIST
-    if (!isBookExist) throw new ResponseError(404, "Book not found");
+    // CHECK IF LOAN EXIST
+    if (!loan) throw new ResponseError(404, "Loan not found");
 
-    // VALIDATE DATA
-    const validatedData = body;
+    // UPDATE RETURN DATE
+    const today = `${new Date().getFullYear()}-${
+      new Date().getUTCMonth() + 1
+    }-${new Date().getDate()}`;
 
-    // SEND UPDATED DATA
-    await collection.updateOne(
-      { ISBN: ISBN },
-      {
-        $set: {
-          ISBN: validatedData.ISBN || isBookExist.ISBN,
-          Title: validatedData.Title || isBookExist.Title,
-          Author: validatedData.Author || isBookExist.Author,
-          Category: validatedData.Category || isBookExist.Category,
-          PublishYear: validatedData.PublishYear || isBookExist.PublishYear,
-          Publisher: validatedData.Publisher || isBookExist.Publisher,
-          AvailableCopies:
-            validatedData.AvailableCopies || isBookExist.AvailableCopies,
+    // UPDATE LOAN
+    const dueDate = new Date(loan.DueDate).getTime();
+    const returnDate = new Date(today).getTime();
+
+    const difference = Math.ceil((returnDate - dueDate) / (1000 * 3600 * 24));
+    console.log(dueDate, returnDate, difference);
+
+    if (difference > 0) {
+      await collection.updateOne(
+        {
+          LoanID: LoanID,
         },
-      }
+        {
+          $set: {
+            ReturnDate: today,
+            Fines: difference * 1000,
+          },
+        }
+      );
+      return;
+    }
+
+    await collection.updateOne(
+      { LoanID: LoanID },
+      { $set: { ReturnDate: today } }
     );
   }
 
-  async deleteBook(ISBN: string): Promise<void> {
+  async deleteLoan(LoanID: string): Promise<void> {
     const collection = this.db.collection(this.collectionName);
 
-    const Book = await collection.findOne({
-      ISBN: ISBN,
-    });
+    // FIND LOAN
+    const loan = await collection.findOneAndDelete({ LoanID: LoanID });
 
-    if (!Book) throw new ResponseError(404, "Book not found");
+    // CHECK IF LOAN EXIST
+    if (!loan) throw new ResponseError(404, "Loan not found");
+  }
 
-    await collection.deleteOne({ ISBN: ISBN });
+  async getLoan(req: any): Promise<any> {
+    const { MemberID, Name } = validate(getLoanValidation, req);
+    const collection = this.db.collection(this.collectionName);
+    let result = {};
+
+    console.info(req);
+
+    // FIND LOAN BY MEMBER ID
+    if (MemberID) {
+      const loan = await collection.findOne({ MemberID: MemberID });
+
+      if (!loan) throw new ResponseError(404, "Loan not found");
+
+      const member = await this.db.collection("members").findOne({ MemberID });
+
+      const book = await this.db
+        .collection("books")
+        .findOne({ ISBN: loan.ISBN });
+
+      result = {
+        _id: loan._id,
+        LoanID: loan.LoanID,
+        ISBN: loan.ISBN,
+        LoanDate: loan.LoanDate,
+        DueDate: loan.DueDate,
+        ReturnDate: loan.ReturnDate,
+        Fines: loan.Fines,
+        book: book
+          ? {
+              Title: book.Title,
+              Author: book.Author,
+              Category: book.Category,
+              PublishYear: book.PublishYear,
+              Publisher: book.Publisher,
+            }
+          : "Book not found",
+        member: {
+          MemberID: loan.MemberID,
+          Name: member.Name,
+          Email: member.Email,
+          Phone: member.Phone,
+        },
+      };
+
+      console.log(result);
+
+      return result;
+    }
+
+    // FIND LOAN BY MEMBER NAME
+    const member = await this.db
+      .collection("members")
+      .findOne({ Name: { $regex: new RegExp(`^${Name}`, "i") } });
+
+    if (!member) throw new ResponseError(404, "Member not found");
+
+    const loan = await collection.findOne({ MemberID: member.MemberID });
+
+    if (!loan) throw new ResponseError(404, "Loan not found");
+
+    const book = await this.db.collection("books").findOne({ ISBN: loan.ISBN });
+
+    result = {
+      _id: loan._id,
+      LoanID: loan.LoanID,
+      ISBN: loan.ISBN,
+      LoanDate: loan.LoanDate,
+      DueDate: loan.DueDate,
+      ReturnDate: loan.ReturnDate,
+      Fines: loan.Fines,
+      book: book
+        ? {
+            Title: book.Title,
+            Author: book.Author,
+            Category: book.Category,
+            PublishYear: book.PublishYear,
+            Publisher: book.Publisher,
+          }
+        : "Book not found",
+      member: {
+        MemberID: loan.MemberID,
+        Name: member.Name,
+        Email: member.Email,
+        Phone: member.Phone,
+      },
+    };
+
+    return result;
   }
 }
