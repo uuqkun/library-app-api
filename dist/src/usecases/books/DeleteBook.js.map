@@ -1,0 +1,1 @@
+{"version":3,"file":"DeleteBook.js","sourceRoot":"","sources":["../../../../src/usecases/books/DeleteBook.ts"],"names":[],"mappings":";;AAEA,MAAqB,UAAU;IAC3B,YAA6B,cAA6B;QAA7B,mBAAc,GAAd,cAAc,CAAe;IAAG,CAAC;IAE9D,KAAK,CAAC,OAAO,CAAC,IAAY;QACtB,OAAO,IAAI,CAAC,cAAc,CAAC,UAAU,CAAC,IAAI,CAAC,CAAC;IAChD,CAAC;CACJ;AAND,6BAMC"}

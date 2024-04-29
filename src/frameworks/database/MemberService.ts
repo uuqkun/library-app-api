@@ -76,13 +76,13 @@ export class MemberService implements MemberRepository {
     const isMemberExist = await collection.findOne({
       Email: Email,
     });
-    
+
     // CHECK IF MEMBER ALREADY REGISTERED
     if (isMemberExist)
       throw new ResponseError(409, "Cannot use this credential");
 
     data.Email = Email;
-    
+
     const lastMember = await collection
       .find()
       .sort({ _id: -1 })
@@ -104,10 +104,13 @@ export class MemberService implements MemberRepository {
   }
 
   async updateMember(reqID: string, data: any): Promise<void> {
-    const { MemberID, ...validatedData } = validate(updateMemberValidation, {
-      MemberID: reqID,
-      ...data,
-    });
+    const { MemberID, Email, ...validatedData } = validate(
+      updateMemberValidation,
+      {
+        MemberID: reqID,
+        ...data,
+      }
+    );
 
     const collection = this.db.collection(this.collectionName);
 
@@ -117,6 +120,13 @@ export class MemberService implements MemberRepository {
 
     // CHECK IF MEMBER EXIST
     if (!member) throw new ResponseError(404, "Member not found");
+
+    if (Email) {
+      const isEmailExist = await collection.findOne({ Email: Email });
+
+      if (isEmailExist)
+        throw new ResponseError(409, "Cannot use this credential");
+    }
 
     // SEND UPDATED DATA
     await collection.updateOne(

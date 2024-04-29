@@ -7,7 +7,7 @@ import { ErrorMiddleware } from "./frameworks/express/middlewares/ErrorMiddlewar
 import { loanRoutes } from "./frameworks/express/routes/loanRoutes";
 import reservationRoutes from "./frameworks/express/routes/reservationRoutes";
 
-const app: Express = express();
+export const app: Express = express();
 const PORT = 3000;
 
 app.use(express.json());
@@ -19,6 +19,6 @@ app.use("/api", reservationRoutes);
 
 app.use(ErrorMiddleware);
 
-app.listen(PORT, () => {
+export const server = app.listen(PORT, () => {
   console.log("Server is running on port 3000");
 });
