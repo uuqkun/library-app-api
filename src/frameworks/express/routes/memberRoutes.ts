@@ -9,11 +9,11 @@ import {
 } from "../../../usecases/members";
 
 const memberRoutes = express.Router();
-const mongoURI = "mongodb://localhost:27017/library";
+const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/library";
 const memberRepository = new MemberService(mongoURI);
 
 // routes
-memberRoutes.get("/members", async (req: Request, res: Response) => {
+memberRoutes.get("/members", async (req: Request, res: Response, next: NextFunction) => {
   try {
     await memberRepository.connect();
     const getAllMembers = new GetAllMembers(memberRepository);
@@ -22,8 +22,7 @@ memberRoutes.get("/members", async (req: Request, res: Response) => {
 
     res.json({ data: members });
   } catch (error) {
-    console.error("Error occurred: ", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    next(error);
   }
 });
 
