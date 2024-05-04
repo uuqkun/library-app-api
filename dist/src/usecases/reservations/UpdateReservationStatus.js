@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateReservationStatus = void 0;
 class UpdateReservationStatus {
     constructor(reservationRepository) {
         this.reservationRepository = reservationRepository;
@@ -9,5 +8,5 @@ class UpdateReservationStatus {
         return this.reservationRepository.updateReservationStatus(ReservationID, Status);
     }
 }
-exports.UpdateReservationStatus = UpdateReservationStatus;
+exports.default = UpdateReservationStatus;
 //# sourceMappingURL=UpdateReservationStatus.js.map

@@ -1,5 +1,5 @@
 import Member from "../../entities/Member";
-import { MemberRepository } from "../../interfaces/repositories/MemberRepository";
+import { MemberRepository } from "../../repositories/MemberRepository";
 
 export default class GetMemberById {
   constructor(private readonly memberRepository: MemberRepository) {}

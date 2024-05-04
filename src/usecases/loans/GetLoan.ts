@@ -1,5 +1,5 @@
 import Loan from "../../entities/Loan";
-import { LoanRepository } from "../../interfaces/repositories/LoanRepository";
+import { LoanRepository } from "../../repositories/LoanRepository";
 
 export default class GetLoan { 
     constructor(private readonly loanRepository: LoanRepository) {}

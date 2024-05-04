@@ -1,4 +1,4 @@
-import { LoanRepository } from "../../interfaces/repositories/LoanRepository";
+import { LoanRepository } from "../../repositories/LoanRepository";
 
 export default class UpdateLoan { 
     constructor(private readonly loanRepository: LoanRepository) {}

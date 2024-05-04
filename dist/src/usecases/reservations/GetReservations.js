@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetReservations = void 0;
 class GetReservations {
     constructor(reservationRepository) {
         this.reservationRepository = reservationRepository;
@@ -9,5 +8,5 @@ class GetReservations {
         return this.reservationRepository.getReservations(req);
     }
 }
-exports.GetReservations = GetReservations;
+exports.default = GetReservations;
 //# sourceMappingURL=GetReservations.js.map

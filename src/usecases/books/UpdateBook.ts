@@ -1,4 +1,4 @@
-import { BookRepository } from "../../interfaces/repositories/BookRepository";
+import { BookRepository } from "../../repositories/BookRepository";
 
 export default class UpdateBook {
   constructor(private readonly bookRepository: BookRepository) {}
