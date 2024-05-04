@@ -1,4 +1,4 @@
-import { MemberRepository } from "../../interfaces/repositories/MemberRepository";
+import { MemberRepository } from "../../repositories/MemberRepository";
 
 export default class DeleteMember { 
     constructor(private readonly memberRepository:MemberRepository) {}

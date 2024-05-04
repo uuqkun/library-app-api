@@ -1,11 +1,11 @@
 import express, { Express, Request, Response } from "express";
 
-import memberRoutes from "./frameworks/express/routes/memberRoutes";
-import bookRoutes from "./frameworks/express/routes/bookRoutes";
+import memberRoutes from "./routes/memberRoutes";
+import bookRoutes from "./routes/bookRoutes";
 
-import { ErrorMiddleware } from "./frameworks/express/middlewares/ErrorMiddleware";
-import { loanRoutes } from "./frameworks/express/routes/loanRoutes";
-import reservationRoutes from "./frameworks/express/routes/reservationRoutes";
+import { ErrorMiddleware } from "./middlewares/ErrorMiddleware";
+import { loanRoutes } from "./routes/loanRoutes";
+import reservationRoutes from "./routes/reservationRoutes";
 
 export const app: Express = express();
 const PORT = 3000;

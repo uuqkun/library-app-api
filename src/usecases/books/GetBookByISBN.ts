@@ -1,5 +1,5 @@
 import Book from "../../entities/Book";
-import { BookRepository } from "../../interfaces/repositories/BookRepository";
+import { BookRepository } from "../../repositories/BookRepository";
 
 export default class GetBookByISBN {
   constructor(private readonly bookRepository: BookRepository) {}
